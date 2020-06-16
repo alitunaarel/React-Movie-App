@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import './App.css';
 import Search from './components/Search'
+import Results from './components/Results'
+import Popup from './components/Popup'
 import axios from 'axios';
 
 
@@ -15,7 +17,12 @@ const App = () => {
   const search = (e) => {
     if (e.key === 'Enter') {
       axios(apiUrl + "&s=" + state.s)
-        .then((data) => { console.log(data) })
+        .then(({ data }) => {
+          let results = data.Search;
+          setState(prevState => {
+            return { ...prevState, results: results }
+          })
+        })
     }
   }
 
@@ -26,8 +33,27 @@ const App = () => {
     setState(prevState => {
       return { ...prevState, s: s }
     })
-
   }
+
+  const openPopup = (id) => {
+    axios(apiUrl + "&i=" + id)
+      .then(({ data }) => {
+        let result = data;
+
+        setState(prevState => {
+          return {
+            ...prevState, selected: result
+          }
+        })
+      })
+  }
+
+  const closePopup = () => {
+    setState(prevState => {
+      return { ...prevState, selected: {} }
+    })
+  }
+
 
   return (
     <div>
@@ -36,6 +62,10 @@ const App = () => {
       </header>
       <main>
         <Search handlerInput={handlerInput} search={search} />
+        <Results results={state.results} openPopup={openPopup} />
+        {(typeof state.selected.Title != "undefined") ?
+          <Popup selected={state.selected} closePopup={closePopup} /> : false
+        }
       </main>
     </div>
   )
